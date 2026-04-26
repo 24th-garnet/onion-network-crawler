@@ -1,0 +1,47 @@
+database_path: "data/onion_graph.db"
+export_dir: "data/exports"
+log_dir: "logs"
+
+tor:
+  proxy_url: "socks5h://127.0.0.1:9050"
+  request_timeout_sec: 30
+  max_retries: 2
+  retry_sleep_sec: 3
+  user_agent: "TemporalOnionGraphResearchCrawler/0.1"
+
+policy:
+  max_depth: 1
+  max_pages: 200
+  max_response_bytes: 2000000
+  same_host_delay_sec: 5
+  allowed_schemes:
+    - "http"
+    - "https"
+  allowed_content_types:
+    - "text/html"
+    - "application/xhtml+xml"
+  skip_extensions:
+    - ".zip"
+    - ".rar"
+    - ".7z"
+    - ".tar"
+    - ".gz"
+    - ".exe"
+    - ".dll"
+    - ".bin"
+    - ".iso"
+    - ".pdf"
+    - ".jpg"
+    - ".jpeg"
+    - ".png"
+    - ".gif"
+    - ".webp"
+    - ".mp4"
+    - ".avi"
+    - ".mov"
+    - ".mp3"
+    - ".wav"
+    - ".ogg"
+    - ".css"
+    - ".js"
+    - ".ico"

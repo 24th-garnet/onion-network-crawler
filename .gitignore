@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# venv / conda
+env/
+venv/
+*.env
+
+# DB / logs / outputs
+data/onion_graph.db*
+data/exports/
+logs/
+
+# OS
+.DS_Store
