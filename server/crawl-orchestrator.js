@@ -107,7 +107,7 @@ async function runSequence(job) {
     setStep(job, "visualize");
     appendCommandLog(
       job,
-      await runRuntimeCommand("visualize", ["--level", "service", "--max-nodes", "500"])
+      await runRuntimeCommand("visualize", ["--level", "service", "--max-nodes", "2000"])
     );
 
     job.visualizationHtml = await readFile(VISUALIZATION_PATH, "utf-8");

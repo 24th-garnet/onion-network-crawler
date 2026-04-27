@@ -153,7 +153,7 @@ def _run_sequence(job: CrawlJob) -> None:
         job.logs.append(_run_runtime_command("export-graph", ["--level", "service"]))
 
         _set_step(job, "visualize")
-        job.logs.append(_run_runtime_command("visualize", ["--level", "service", "--max-nodes", "500"]))
+        job.logs.append(_run_runtime_command("visualize", ["--level", "service", "--max-nodes", "2000"]))
 
         job.visualizationHtml = VISUALIZATION_PATH.read_text(encoding="utf-8")
         job.progress = 100
