@@ -1,17 +1,20 @@
-import { mkdir, readFile, rm } from "node:fs/promises";
+import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 import { runCrawlerCommand } from "@/server/crawler-cli";
 
 const ROOT_DIR = process.cwd();
-const EXPORT_DIR = path.join(ROOT_DIR, "data", "exports");
-const LOG_DIR = path.join(ROOT_DIR, "logs");
-const VISUALIZATION_PATH = path.join(EXPORT_DIR, "service_interactive.html");
-const DB_FILES = [
-  path.join(ROOT_DIR, "data", "onion_graph.db"),
-  path.join(ROOT_DIR, "data", "onion_graph.db-shm"),
-  path.join(ROOT_DIR, "data", "onion_graph.db-wal")
-];
+const READONLY_SETTINGS_PATH = path.join(ROOT_DIR, "config", "settings.yaml");
+const READONLY_SEEDS_PATH = path.join(ROOT_DIR, "data", "seeds.txt");
+const RUNTIME_ROOT = path.join("/tmp", "onionnetwork-runtime");
+const RUNTIME_DATA_DIR = path.join(RUNTIME_ROOT, "data");
+const RUNTIME_EXPORT_DIR = path.join(RUNTIME_DATA_DIR, "exports");
+const RUNTIME_LOG_DIR = path.join(RUNTIME_ROOT, "logs");
+const RUNTIME_DB_PATH = path.join(RUNTIME_DATA_DIR, "onion_graph.db");
+const RUNTIME_SETTINGS_PATH = path.join(RUNTIME_ROOT, "settings.yaml");
+const RUNTIME_SEEDS_PATH = path.join(RUNTIME_DATA_DIR, "seeds.txt");
+const VISUALIZATION_PATH = path.join(RUNTIME_EXPORT_DIR, "service_interactive.html");
+const DB_FILES = [RUNTIME_DB_PATH, `${RUNTIME_DB_PATH}-shm`, `${RUNTIME_DB_PATH}-wal`];
 
 const STEP_PLAN = [
   { key: "reset", label: "既存データをリセット", progress: 15 },
@@ -51,10 +54,27 @@ async function resetCrawlerState() {
   for (const file of DB_FILES) {
     await rm(file, { force: true });
   }
-  await rm(EXPORT_DIR, { recursive: true, force: true });
-  await rm(LOG_DIR, { recursive: true, force: true });
-  await mkdir(EXPORT_DIR, { recursive: true });
-  await mkdir(LOG_DIR, { recursive: true });
+  await rm(RUNTIME_EXPORT_DIR, { recursive: true, force: true });
+  await rm(RUNTIME_LOG_DIR, { recursive: true, force: true });
+  await mkdir(RUNTIME_DATA_DIR, { recursive: true });
+  await mkdir(RUNTIME_EXPORT_DIR, { recursive: true });
+  await mkdir(RUNTIME_LOG_DIR, { recursive: true });
+}
+
+async function prepareRuntimeFiles() {
+  const settingsRaw = await readFile(READONLY_SETTINGS_PATH, "utf-8");
+  const runtimeSettings = settingsRaw
+    .replace(/^database_path:.*$/m, `database_path: "${RUNTIME_DB_PATH}"`)
+    .replace(/^export_dir:.*$/m, `export_dir: "${RUNTIME_EXPORT_DIR}"`)
+    .replace(/^log_dir:.*$/m, `log_dir: "${RUNTIME_LOG_DIR}"`);
+
+  const seedsRaw = await readFile(READONLY_SEEDS_PATH, "utf-8");
+  await writeFile(RUNTIME_SETTINGS_PATH, runtimeSettings, "utf-8");
+  await writeFile(RUNTIME_SEEDS_PATH, seedsRaw, "utf-8");
+}
+
+async function runRuntimeCommand(command, args = []) {
+  return runCrawlerCommand(command, ["--config", RUNTIME_SETTINGS_PATH, ...args]);
 }
 
 function appendCommandLog(job, result) {
@@ -66,23 +86,24 @@ async function runSequence(job) {
   try {
     setStep(job, "reset");
     await resetCrawlerState();
+    await prepareRuntimeFiles();
 
     setStep(job, "init");
-    appendCommandLog(job, await runCrawlerCommand("init-db"));
+    appendCommandLog(job, await runRuntimeCommand("init-db"));
 
     setStep(job, "import");
-    appendCommandLog(job, await runCrawlerCommand("import-seeds", ["--seeds", "data/seeds.txt"]));
+    appendCommandLog(job, await runRuntimeCommand("import-seeds", ["--seeds", RUNTIME_SEEDS_PATH]));
 
     setStep(job, "crawl");
-    appendCommandLog(job, await runCrawlerCommand("crawl"));
+    appendCommandLog(job, await runRuntimeCommand("crawl"));
 
     setStep(job, "export");
-    appendCommandLog(job, await runCrawlerCommand("export-graph", ["--level", "service"]));
+    appendCommandLog(job, await runRuntimeCommand("export-graph", ["--level", "service"]));
 
     setStep(job, "visualize");
     appendCommandLog(
       job,
-      await runCrawlerCommand("visualize", ["--level", "service", "--max-nodes", "500"])
+      await runRuntimeCommand("visualize", ["--level", "service", "--max-nodes", "500"])
     );
 
     job.visualizationHtml = await readFile(VISUALIZATION_PATH, "utf-8");
