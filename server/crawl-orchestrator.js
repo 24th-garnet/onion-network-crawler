@@ -37,7 +37,8 @@ function newJob() {
     visualizationHtml: null,
     startedAt: new Date().toISOString(),
     finishedAt: null,
-    error: null
+    error: null,
+    maxDepth: 1
   };
 }
 
@@ -95,7 +96,10 @@ async function runSequence(job) {
     appendCommandLog(job, await runRuntimeCommand("import-seeds", ["--seeds", RUNTIME_SEEDS_PATH]));
 
     setStep(job, "crawl");
-    appendCommandLog(job, await runRuntimeCommand("crawl"));
+    appendCommandLog(
+      job,
+      await runRuntimeCommand("crawl", ["--max-depth", String(job.maxDepth)])
+    );
 
     setStep(job, "export");
     appendCommandLog(job, await runRuntimeCommand("export-graph", ["--level", "service"]));
@@ -119,11 +123,13 @@ async function runSequence(job) {
   }
 }
 
-export function startCrawlJob() {
+export function startCrawlJob(options = {}) {
   if (currentJob && currentJob.status === "running") {
     return currentJob;
   }
   currentJob = newJob();
+  const depth = Number(options.maxDepth ?? 1);
+  currentJob.maxDepth = Number.isFinite(depth) ? Math.max(0, Math.min(5, depth)) : 1;
   runSequence(currentJob);
   return currentJob;
 }

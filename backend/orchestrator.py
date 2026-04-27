@@ -41,6 +41,7 @@ class CrawlJob:
     startedAt: str = ""
     finishedAt: str | None = None
     error: str | None = None
+    maxDepth: int = 1
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -53,6 +54,7 @@ class CrawlJob:
             "startedAt": self.startedAt,
             "finishedAt": self.finishedAt,
             "error": self.error,
+            "maxDepth": self.maxDepth,
         }
 
 
@@ -145,7 +147,7 @@ def _run_sequence(job: CrawlJob) -> None:
         job.logs.append(_run_runtime_command("import-seeds", ["--seeds", str(RUNTIME_SEEDS_PATH)]))
 
         _set_step(job, "crawl")
-        job.logs.append(_run_runtime_command("crawl"))
+        job.logs.append(_run_runtime_command("crawl", ["--max-depth", str(job.maxDepth)]))
 
         _set_step(job, "export")
         job.logs.append(_run_runtime_command("export-graph", ["--level", "service"]))
@@ -170,7 +172,7 @@ def _run_sequence(job: CrawlJob) -> None:
         job.finishedAt = _utc_now()
 
 
-def start_crawl_job() -> CrawlJob:
+def start_crawl_job(max_depth: int = 1) -> CrawlJob:
     global _current_job
     with _lock:
         if _current_job and _current_job.status == "running":
@@ -181,6 +183,7 @@ def start_crawl_job() -> CrawlJob:
             progress=5,
             message="ジョブを開始しました",
             startedAt=_utc_now(),
+            maxDepth=max(0, min(5, int(max_depth))),
         )
         thread = threading.Thread(target=_run_sequence, args=(_current_job,), daemon=True)
         thread.start()

@@ -3,19 +3,23 @@ import { startCrawlJob } from "@/server/crawl-orchestrator";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export async function POST() {
+export async function POST(request) {
+  const body = await request.json().catch(() => ({}));
+  const maxDepth = Number(body?.maxDepth ?? 1);
+
   const remoteBaseUrl = process.env.REMOTE_CRAWLER_API_BASE_URL;
   if (remoteBaseUrl) {
     const response = await fetch(`${remoteBaseUrl.replace(/\/$/, "")}/crawl/start`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ maxDepth }),
       cache: "no-store"
     });
     const payload = await response.json();
     return Response.json(payload, { status: response.status });
   }
 
-  const job = startCrawlJob();
+  const job = startCrawlJob({ maxDepth });
   return Response.json({
     ok: true,
     job: {

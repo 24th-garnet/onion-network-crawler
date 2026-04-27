@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 export default function HomePage() {
   const [job, setJob] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [maxDepth, setMaxDepth] = useState(1);
 
   const progress = useMemo(() => {
     if (!job) {
@@ -48,7 +49,9 @@ export default function HomePage() {
     try {
       setLoading(true);
       const response = await fetch("/api/crawl/start", {
-        method: "POST"
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ maxDepth: Number(maxDepth) })
       });
       const data = await response.json();
       if (!response.ok || !data?.ok) {
@@ -79,6 +82,16 @@ export default function HomePage() {
         <p>
           毎回リセットし、`data/seeds.txt` (Hidden Wiki) からクロールして可視化まで自動実行します。
         </p>
+        <label htmlFor="maxDepth">クロール深度 (max-depth)</label>
+        <input
+          id="maxDepth"
+          type="number"
+          min={0}
+          max={5}
+          value={maxDepth}
+          onChange={(event) => setMaxDepth(event.target.value)}
+          disabled={loading || isRunning}
+        />
         <div className="actions single-action">
           <button onClick={startCrawl} disabled={loading || isRunning}>
             {isRunning ? "クロール実行中..." : "クロール開始"}

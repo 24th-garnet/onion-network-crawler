@@ -29,7 +29,7 @@ npm run dev
 - 起動コマンド: Dockerfile の `CMD` を利用（`/work/scripts/start-render-api.sh`）
 - ヘルスチェック: `GET /health`
 - 実行API:
-  - `POST /crawl/start`
+  - `POST /crawl/start` (`{ "maxDepth": 1 }` のように深度指定可能)
   - `GET /crawl/status`
 
 Vercel 側から Render API を使う場合は、環境変数に Render のURLを設定します。
