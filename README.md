@@ -21,6 +21,23 @@ npm run dev
 
 `http://localhost:3000` を開くと、ワインレッド基調のUIで操作できます。
 
+### Render API サーバとして使う場合
+
+このリポジトリは Docker で FastAPI バックエンドも起動できます。Render の Web Service では以下を使用します。
+
+- Docker 環境でデプロイ
+- 起動コマンド: Dockerfile の `CMD` を利用（`/work/scripts/start-render-api.sh`）
+- ヘルスチェック: `GET /health`
+- 実行API:
+  - `POST /crawl/start`
+  - `GET /crawl/status`
+
+Vercel 側から Render API を使う場合は、環境変数に Render のURLを設定します。
+
+```bash
+REMOTE_CRAWLER_API_BASE_URL=https://<your-render-service>.onrender.com
+```
+
 ## 1. 前提
 
 作業ディレクトリは以下を想定します。
