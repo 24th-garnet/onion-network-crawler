@@ -1,0 +1,153 @@
+:root {
+  color-scheme: dark;
+  --bg-main: #13070d;
+  --bg-panel: #24101a;
+  --bg-soft: #311320;
+  --wine: #8e1f47;
+  --wine-strong: #c22f63;
+  --text-main: #fceff4;
+  --text-soft: #d7b6c3;
+  --line: #5d2a3f;
+  --shadow: rgba(0, 0, 0, 0.35);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: "Inter", "Noto Sans JP", sans-serif;
+  background: radial-gradient(circle at 10% 10%, #2a1020, var(--bg-main) 50%);
+  color: var(--text-main);
+}
+
+.container {
+  width: min(1200px, 92vw);
+  margin: 2.2rem auto 3rem;
+  display: grid;
+  gap: 1rem;
+}
+
+.grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.stats-grid {
+  grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
+}
+
+.controls {
+  grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+}
+
+.card {
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: linear-gradient(170deg, rgba(255, 255, 255, 0.02), transparent 40%), var(--bg-panel);
+  box-shadow: 0 20px 30px var(--shadow);
+  padding: 1rem;
+}
+
+.hero h1 {
+  margin: 0.4rem 0 0.5rem;
+  letter-spacing: 0.02em;
+}
+
+.hero p {
+  color: var(--text-soft);
+  margin: 0;
+}
+
+.eyebrow {
+  color: var(--wine-strong);
+  margin: 0;
+  font-weight: 700;
+  font-size: 0.8rem;
+  letter-spacing: 0.12em;
+}
+
+.stat-card p {
+  margin: 0;
+  color: var(--text-soft);
+  font-size: 0.83rem;
+}
+
+.stat-card strong {
+  display: block;
+  margin-top: 0.35rem;
+  font-size: 1.5rem;
+}
+
+h2 {
+  margin: 0 0 0.8rem;
+  font-size: 1rem;
+}
+
+label {
+  display: block;
+  margin: 0.7rem 0 0.35rem;
+  font-size: 0.82rem;
+  color: var(--text-soft);
+}
+
+textarea,
+input,
+select,
+button {
+  width: 100%;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  font: inherit;
+}
+
+textarea,
+input,
+select {
+  background: var(--bg-soft);
+  color: var(--text-main);
+  padding: 0.65rem 0.7rem;
+}
+
+textarea:focus,
+input:focus,
+select:focus {
+  outline: 2px solid rgba(194, 47, 99, 0.6);
+  border-color: var(--wine-strong);
+}
+
+.actions {
+  display: flex;
+  gap: 0.55rem;
+  margin-top: 0.8rem;
+}
+
+button {
+  cursor: pointer;
+  color: var(--text-main);
+  border-color: var(--wine);
+  background: linear-gradient(160deg, var(--wine-strong), var(--wine));
+  padding: 0.65rem 0.6rem;
+  font-weight: 600;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.log-card pre {
+  margin: 0;
+  max-height: 300px;
+  overflow: auto;
+  background: #0c0409;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 0.75rem;
+  color: #f7dfe8;
+  font-size: 0.82rem;
+  white-space: pre-wrap;
+  line-height: 1.5;
+}

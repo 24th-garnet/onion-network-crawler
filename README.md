@@ -2,6 +2,19 @@
 
 このドキュメントは、`OnionNetwork` プロジェクトを **Dockerではなくローカル環境** で実行し、Hidden Wiki などの seed から `.onion` リンクグラフをクロール・保存・可視化するための手順です。
 
+## Web Dashboard (Next.js)
+
+Next.js ベースのWebダッシュボードを追加しています。Python CLI (`python -m src.main`) を API 経由で呼び出し、ブラウザから `init-db` / `import-seeds` / `crawl` / `export-graph` / `visualize` を実行できます。
+
+### 起動方法
+
+```bash
+npm install
+npm run dev
+```
+
+`http://localhost:3000` を開くと、ワインレッド基調のUIで操作できます。
+
 ## 1. 前提
 
 作業ディレクトリは以下を想定します。
