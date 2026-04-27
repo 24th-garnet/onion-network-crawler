@@ -4,7 +4,13 @@
 
 ## Web Dashboard (Next.js)
 
-Next.js ベースのWebダッシュボードを追加しています。Python CLI (`python -m src.main`) を API 経由で呼び出し、ブラウザから `init-db` / `import-seeds` / `crawl` / `export-graph` / `visualize` を実行できます。
+Next.js ベースのWebダッシュボードを追加しています。初期verでは、**クロール開始ボタン1つ**で次を順番に自動実行します。
+
+1. 過去データをリセット（DB / exports / logs）
+2. `data/seeds.txt`（Hidden Wiki を想定）を投入
+3. クロール実行
+4. グラフ出力・可視化生成
+5. Webアプリ内ボックスへ可視化表示
 
 ### 起動方法
 
