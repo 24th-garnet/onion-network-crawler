@@ -6,6 +6,8 @@ const execFileAsync = promisify(execFile);
 
 const ROOT_DIR = process.cwd();
 const PYTHON_MODULE_ENTRY = ["-m", "src.main"];
+const PYTHON_CANDIDATES = ["python", "python3"];
+let resolvedPythonCommand = null;
 
 function parseStatsOutput(stdout) {
   const stats = {};
@@ -22,17 +24,45 @@ function parseStatsOutput(stdout) {
 
 export async function runCrawlerCommand(command, args = []) {
   const cliArgs = [...PYTHON_MODULE_ENTRY, command, ...args];
-  const { stdout, stderr } = await execFileAsync("python", cliArgs, {
+  const pythonCommand = await resolvePythonCommand();
+  const { stdout, stderr } = await execFileAsync(pythonCommand, cliArgs, {
     cwd: ROOT_DIR,
     timeout: 1000 * 60 * 20,
     maxBuffer: 1024 * 1024 * 10
   });
 
   return {
-    command: `python ${cliArgs.join(" ")}`,
+    command: `${pythonCommand} ${cliArgs.join(" ")}`,
     stdout,
     stderr
   };
+}
+
+async function resolvePythonCommand() {
+  if (resolvedPythonCommand) {
+    return resolvedPythonCommand;
+  }
+
+  for (const candidate of PYTHON_CANDIDATES) {
+    try {
+      await execFileAsync(candidate, ["--version"], {
+        cwd: ROOT_DIR,
+        timeout: 5000,
+        maxBuffer: 1024 * 64
+      });
+      resolvedPythonCommand = candidate;
+      return candidate;
+    } catch (error) {
+      if (error?.code === "ENOENT") {
+        continue;
+      }
+      throw error;
+    }
+  }
+
+  throw new Error(
+    "Python runtime not found (tried: python, python3). Vercel Node serverless does not include Python by default."
+  );
 }
 
 export async function fetchStats() {
