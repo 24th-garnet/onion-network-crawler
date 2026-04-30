@@ -42,6 +42,7 @@ class CrawlJob:
     finishedAt: str | None = None
     error: str | None = None
     maxDepth: int = 1
+    seedText: str = ""
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -55,6 +56,7 @@ class CrawlJob:
             "finishedAt": self.finishedAt,
             "error": self.error,
             "maxDepth": self.maxDepth,
+            "seedText": self.seedText,
         }
 
 
@@ -93,7 +95,7 @@ def _reset_runtime_state() -> None:
     RUNTIME_LOG_DIR.mkdir(parents=True, exist_ok=True)
 
 
-def _prepare_runtime_files() -> None:
+def _prepare_runtime_files(job: CrawlJob) -> None:
     settings_raw = READONLY_SETTINGS_PATH.read_text(encoding="utf-8")
     runtime_settings = settings_raw
     runtime_settings = runtime_settings.replace(
@@ -110,7 +112,10 @@ def _prepare_runtime_files() -> None:
     )
 
     RUNTIME_SETTINGS_PATH.write_text(runtime_settings, encoding="utf-8")
-    RUNTIME_SEEDS_PATH.write_text(READONLY_SEEDS_PATH.read_text(encoding="utf-8"), encoding="utf-8")
+    if job.seedText.strip():
+        RUNTIME_SEEDS_PATH.write_text(f"{job.seedText.strip()}\n", encoding="utf-8")
+    else:
+        RUNTIME_SEEDS_PATH.write_text(READONLY_SEEDS_PATH.read_text(encoding="utf-8"), encoding="utf-8")
 
 
 def _run_runtime_command(command: str, extra_args: list[str] | None = None) -> str:
@@ -138,7 +143,7 @@ def _run_sequence(job: CrawlJob) -> None:
     try:
         _set_step(job, "reset")
         _reset_runtime_state()
-        _prepare_runtime_files()
+        _prepare_runtime_files(job)
 
         _set_step(job, "init")
         job.logs.append(_run_runtime_command("init-db"))
@@ -172,7 +177,7 @@ def _run_sequence(job: CrawlJob) -> None:
         job.finishedAt = _utc_now()
 
 
-def start_crawl_job(max_depth: int = 1) -> CrawlJob:
+def start_crawl_job(max_depth: int = 1, seed_text: str = "") -> CrawlJob:
     global _current_job
     with _lock:
         if _current_job and _current_job.status == "running":
@@ -184,6 +189,7 @@ def start_crawl_job(max_depth: int = 1) -> CrawlJob:
             message="ジョブを開始しました",
             startedAt=_utc_now(),
             maxDepth=max(0, min(5, int(max_depth))),
+            seedText=seed_text if isinstance(seed_text, str) else "",
         )
         thread = threading.Thread(target=_run_sequence, args=(_current_job,), daemon=True)
         thread.start()

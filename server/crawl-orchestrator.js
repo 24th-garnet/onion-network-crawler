@@ -38,7 +38,8 @@ function newJob() {
     startedAt: new Date().toISOString(),
     finishedAt: null,
     error: null,
-    maxDepth: 1
+    maxDepth: 1,
+    seedText: ""
   };
 }
 
@@ -62,14 +63,16 @@ async function resetCrawlerState() {
   await mkdir(RUNTIME_LOG_DIR, { recursive: true });
 }
 
-async function prepareRuntimeFiles() {
+async function prepareRuntimeFiles(job) {
   const settingsRaw = await readFile(READONLY_SETTINGS_PATH, "utf-8");
   const runtimeSettings = settingsRaw
     .replace(/^database_path:.*$/m, `database_path: "${RUNTIME_DB_PATH}"`)
     .replace(/^export_dir:.*$/m, `export_dir: "${RUNTIME_EXPORT_DIR}"`)
     .replace(/^log_dir:.*$/m, `log_dir: "${RUNTIME_LOG_DIR}"`);
 
-  const seedsRaw = await readFile(READONLY_SEEDS_PATH, "utf-8");
+  const seedsRaw = job?.seedText?.trim()
+    ? `${job.seedText.trim()}\n`
+    : await readFile(READONLY_SEEDS_PATH, "utf-8");
   await writeFile(RUNTIME_SETTINGS_PATH, runtimeSettings, "utf-8");
   await writeFile(RUNTIME_SEEDS_PATH, seedsRaw, "utf-8");
 }
@@ -87,7 +90,7 @@ async function runSequence(job) {
   try {
     setStep(job, "reset");
     await resetCrawlerState();
-    await prepareRuntimeFiles();
+    await prepareRuntimeFiles(job);
 
     setStep(job, "init");
     appendCommandLog(job, await runRuntimeCommand("init-db"));
@@ -130,6 +133,7 @@ export function startCrawlJob(options = {}) {
   currentJob = newJob();
   const depth = Number(options.maxDepth ?? 1);
   currentJob.maxDepth = Number.isFinite(depth) ? Math.max(0, Math.min(5, depth)) : 1;
+  currentJob.seedText = typeof options.seedText === "string" ? options.seedText : "";
   runSequence(currentJob);
   return currentJob;
 }

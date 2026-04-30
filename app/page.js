@@ -6,6 +6,7 @@ export default function HomePage() {
   const [job, setJob] = useState(null);
   const [loading, setLoading] = useState(false);
   const [maxDepth, setMaxDepth] = useState(1);
+  const [seedText, setSeedText] = useState("");
 
   const progress = useMemo(() => {
     if (!job) {
@@ -51,7 +52,10 @@ export default function HomePage() {
       const response = await fetch("/api/crawl/start", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ maxDepth: Number(maxDepth) })
+        body: JSON.stringify({
+          maxDepth: Number(maxDepth),
+          seedText
+        })
       });
       const data = await response.json();
       if (!response.ok || !data?.ok) {
@@ -90,6 +94,15 @@ export default function HomePage() {
           max={5}
           value={maxDepth}
           onChange={(event) => setMaxDepth(event.target.value)}
+          disabled={loading || isRunning}
+        />
+        <label htmlFor="seedText">初期seed (任意、1行1URL)</label>
+        <textarea
+          id="seedText"
+          rows={5}
+          value={seedText}
+          onChange={(event) => setSeedText(event.target.value)}
+          placeholder="未入力の場合は data/seeds.txt を使用します"
           disabled={loading || isRunning}
         />
         <div className="actions single-action">
