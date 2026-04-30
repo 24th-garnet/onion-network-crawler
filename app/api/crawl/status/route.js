@@ -22,6 +22,7 @@ export async function GET() {
     });
   }
 
+  const hasVisualization = Boolean(job.visualizationHtml);
   return Response.json({
     ok: true,
     job: {
@@ -33,7 +34,9 @@ export async function GET() {
       startedAt: job.startedAt,
       finishedAt: job.finishedAt,
       logs: job.logs,
-      visualizationHtml: job.visualizationHtml
+      hasVisualization,
+      seedText: job.seedText,
+      maxDepth: job.maxDepth
     }
   });
 }

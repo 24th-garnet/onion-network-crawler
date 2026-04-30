@@ -14,6 +14,8 @@ Next.js ベースのWebダッシュボードを追加しています。初期ver
 
 Vercel 上で iframe に埋め込むため、可視化HTMLは PyVis の `cdn_resources=remote`（bindings をインライン、vis-network は CDN）で生成します。`local` のままだと `lib/...` 相対パスがアプリのオリジンに解決されグラフが表示されません。
 
+また、可視化HTMLはサイズが大きいため **`/api/crawl/status` の JSON には含めず**、`GET /api/crawl/result`（サーバが Render の `GET /crawl/result` をプロキシ）で iframe 表示します。
+
 ### 起動方法
 
 ```bash

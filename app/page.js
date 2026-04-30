@@ -129,13 +129,22 @@ export default function HomePage() {
 
       <section className="card viz-card">
         <h2>可視化ビュー</h2>
-        {job?.visualizationHtml ? (
-          <iframe
-            className="viz-frame"
-            title="Onion Graph Visualization"
-            srcDoc={job.visualizationHtml}
-            sandbox="allow-scripts allow-same-origin"
-          />
+        {job?.status === "done" && (job?.hasVisualization || job?.visualizationHtml) ? (
+          job?.hasVisualization ? (
+            <iframe
+              key={job.finishedAt || job.id}
+              className="viz-frame"
+              title="Onion Graph Visualization"
+              src="/api/crawl/result"
+            />
+          ) : (
+            <iframe
+              className="viz-frame"
+              title="Onion Graph Visualization"
+              srcDoc={job.visualizationHtml}
+              sandbox="allow-scripts allow-same-origin"
+            />
+          )
         ) : (
           <div className="viz-empty">クロール完了後にここへグラフを表示します。</div>
         )}

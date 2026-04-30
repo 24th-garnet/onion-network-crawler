@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 from pydantic import BaseModel, Field
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse
 
 from backend.orchestrator import get_crawl_job, start_crawl_job
 
@@ -47,4 +48,20 @@ def crawl_status() -> dict:
     job = get_crawl_job()
     if job is None:
         return {"ok": True, "job": None}
-    return {"ok": True, "job": job.to_dict()}
+    payload = job.to_dict()
+    # Avoid multi‑MB JSON on every poll; HTML is served by GET /crawl/result
+    has_viz = bool(payload.get("visualizationHtml"))
+    payload.pop("visualizationHtml", None)
+    payload["hasVisualization"] = has_viz
+    return {"ok": True, "job": payload}
+
+
+@app.get("/crawl/result", response_class=HTMLResponse)
+def crawl_result() -> HTMLResponse:
+    job = get_crawl_job()
+    if job is None or job.status != "done":
+        raise HTTPException(status_code=404, detail="No completed crawl job")
+    html = job.visualizationHtml
+    if not html:
+        raise HTTPException(status_code=404, detail="No visualization HTML available")
+    return HTMLResponse(content=html)
