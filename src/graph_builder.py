@@ -5,13 +5,52 @@ from pathlib import Path
 import networkx as nx
 import pandas as pd
 
-from src.normalizer import onion_host_from_url
+from src.normalizer import normalize_url, onion_host_from_url
 from src.storage import Storage
 
 
 class GraphBuilder:
     def __init__(self, storage: Storage):
         self.storage = storage
+
+    def _iter_seed_normalized(self):
+        """depth=0 のキュー行は import-seeds で投入された初期 seed。"""
+        rows = self.storage.query(
+            """
+            SELECT url FROM crawl_queue WHERE depth = 0
+            """
+        )
+        seen: set[str] = set()
+        for r in rows:
+            nu = normalize_url(r["url"])
+            if nu is None:
+                continue
+            if nu.normalized_url in seen:
+                continue
+            seen.add(nu.normalized_url)
+            yield nu
+
+    def _merge_seed_nodes_page(self, g: nx.DiGraph) -> None:
+        for nu in self._iter_seed_normalized():
+            if nu.normalized_url in g:
+                g.nodes[nu.normalized_url]["is_seed"] = True
+            else:
+                g.add_node(
+                    nu.normalized_url,
+                    type="page",
+                    onion_host=nu.onion_host,
+                    is_seed=True,
+                )
+
+    def _merge_seed_nodes_service(self, g: nx.DiGraph) -> None:
+        for nu in self._iter_seed_normalized():
+            if not nu.onion_host:
+                continue
+            host = nu.onion_host
+            if host in g:
+                g.nodes[host]["is_seed"] = True
+            else:
+                g.add_node(host, type="service", is_seed=True)
 
     def build_page_graph(self) -> nx.DiGraph:
         g = nx.DiGraph()
@@ -41,6 +80,7 @@ class GraphBuilder:
                     target_onion_host=r["target_onion_host"],
                 )
 
+        self._merge_seed_nodes_page(g)
         self._add_metrics(g)
         return g
 
@@ -78,6 +118,7 @@ class GraphBuilder:
                     observed_at=r["observed_at"],
                 )
 
+        self._merge_seed_nodes_service(g)
         self._add_metrics(g)
         return g
 
@@ -93,6 +134,8 @@ class GraphBuilder:
                 pagerank = nx.pagerank(g, weight="weight")
             except Exception:
                 pagerank = {n: 0.0 for n in g.nodes}
+        elif g.number_of_nodes() > 0 and g.number_of_edges() == 0:
+            pagerank = {n: 1.0 / g.number_of_nodes() for n in g.nodes}
         else:
             pagerank = {n: 0.0 for n in g.nodes}
 
