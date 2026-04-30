@@ -43,6 +43,10 @@ class Visualizer:
             notebook=False,
             bgcolor="#ffffff",
             font_color="#222222",
+            # local は lib/ への相対パスを出力するため、Vercel 上で iframe(srcDoc)
+            # 埋め込み時に https://*.vercel.app/lib/... が 404 になり描画できない。
+            # remote は bindings をインライン化し vis を CDN から読むため埋め込みに適する。
+            cdn_resources="remote",
         )
 
         for node, attrs in g.nodes(data=True):
